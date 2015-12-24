@@ -1,0 +1,26 @@
+language: python
+python: '2.7'
+sudo: required
+dist: trusty
+env:
+  global:
+  - secure: "SrZoDjGOzmH4WO8e6hWq582yVWjLtRf5B+rA55W2ozlJTxgJLSsWTKokBOtJy1+Gjj9QvGgVCBkv5GeCa7aiNXPyFcCmJ58jT/pWFYNvllDTB3ADwHEWtXJx9lA11ymbZ0adAF/q57gN1x+JuPke8D5cjUBNlHkgHzOs40H4OZhAS33IT1s/UGk3T6O2JVVU0GWME9kQf9HB9vwVT0HZuAP8NgY/e3oQssCGBAy3d3Vhe8BzofOUZPr2Fgi0UmFhld8/7WNmL4I9hoUwmyetMH8LQihfa4xgoqvrLMyX75xtKx2BR+1Ep9aJNm+3wVuAQcXEe53yuP5xZzG5kVLCfaN8L4Udcwi9PaL9cuTAThj/4u4S94YgQkzuGIFCdJpPTzfSgPqiESGwBEAnMAHWYz9s9gS3WKsBrwKBulR91vK7pE9Libb790b74nt1G0TEx6bRMwo7Iwq9dK40Q74CkJqiepXXdnI9e3JrTSlVE1wvm2IvGgr5fdFI46fXLs9xEWSOyzVO9A5hbTXsSMIyygqFC27kqaac7AVth9M9dT+mr2fNLrackAv/HEWW5boNcHsJd8bo1vLO64ahF5dQ/nYb4YBawSVXYlRASR5RT9XnqCE8SgX9IbjZ8wB1OjQxaJsO+wW14SFVHJbdWxkGDJBJguyqQ0Z7gFExoKJU4Ag="
+  - secure: "GcT1ZwCoYKw40Z7QgcwNmMfyiqQzdGPM3OGwRX6/quIVLMC87QVOt5E/jfSPu4S8O66L+1hbeXh+VgIIy7JOxrR4DitjlnEs5LuT2J4gyTzSIH5lHCkcvUhRRTwsZZfSdMPvB1TR0RJ8dzMQ2RSmkAzL91G66twu2AnCckprcH2eqO+g2MD7qiy7lCqJlGOVJLeJZBegxTHnVuMC8m03+P3Fo95q/yzqFrrh9l7+uu2lFsPTTNpmQUU8ax02ssVZ8GiO64WwpsFYPkOzmRxi3I7+JWvGl+zXGr0gJw/RJqauBEeomdmsoiDxAKH2PlvgMCDw2fiHy2hS4JQIuFgzRiEvBid2Iv5TVpU5kkuynyrU3+MIxkDYdYmwLrW5EVhCYbSRnxLU6adcH27JWq9ruQWicvPcJx40WJLlP0Efb7np4A2gQyEpaXvUhNvzrS/dcT5wOtqRCXX69h75YGlBOeB4jEyRLyA0K4WRzlCyW48vG+oOeeiJfDPiDgNVZ8qrXGIjTTAleIiPSQxRosBYa5ymVl2skSQUH2ChYjBDLjNfeijRjrKAO/F5jaw5BzbHhNCd7HcycdoHYU22SmrqUxYZUOoO84ufjOyFDOJXSfAtmqsUN+C1uZfV/IvVK2sQj8QdpV03ULV+WUSCKZKfBrpUawKeyT08ZV2tYLrvYVo="
+git:	
+  submodules: false
+before_install:
+- git submodule update --init --recursive
+- git submodule foreach git pull origin master
+- sudo apt-get update -qq
+- sudo apt-get install -qq squashfs-tools uuid python-apt python-pycurl
+install:
+- sudo pip install ansible
+- sudo pip install docker-py
+script:
+- cd squashible
+- sudo ansible-playbook -i hosts_generator.py squashible.yml -e "live_os=opensuse_42.1"
+- ls -lah live_output
+- sudo chown -R travis:travis live_output 
+- cd live_output
+after_success:
+    "curl --ftp-create-dirs -T '{vmlinuz,initrd.img,rootfs.img}' -u $FTP_USER:$FTP_PASSWORD ftp://images.squashible.com/images/squashible-opensuse-42.1-minimal/"
